@@ -1,6 +1,6 @@
 versions:
   - version: "11.3.1"
-    commit: "25059a9e6d"
+    commit: "d0ee52f28c"
     builds:
-      linux-x86: 5
-      linux-arm: 5
+      linux-x86: 10
+      linux-arm: 6
