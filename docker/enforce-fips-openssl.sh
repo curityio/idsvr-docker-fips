@@ -40,6 +40,7 @@ awk 'BEGIN{replaced=0}
     {print}
     END{if (replaced==0) print "openssl_conf = curity_fips_init"}' "$CNF" > "$TMP"
 mv "$TMP" "$CNF"
+chmod 0644 "$CNF"
 
 cat >> "$CNF" <<'EOF'
 # BEGIN CURITY FIPS MANAGED
