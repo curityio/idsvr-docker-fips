@@ -84,9 +84,9 @@ yq -o=json '.' "${VERSIONS_FILE}" | jq -c '.versions[]' | while read -r entry; d
 
   TAG="${IMAGE_BASE}:${version}"
 
-  # Additional tags: MAJOR.MINOR, MAJOR.MINOR-ubuntu22, and "latest" for the newest version
+  # Additional tags: MAJOR.MINOR, VERSION-ubuntu22, and "latest" for the newest version
   major_minor=$(cut -d. -f1,2 <<<"${version}")
-  TAG_ARGS=(-t "${TAG}" -t "${IMAGE_BASE}:${major_minor}" -t "${IMAGE_BASE}:${major_minor}-ubuntu22")
+  TAG_ARGS=(-t "${TAG}" -t "${IMAGE_BASE}:${major_minor}" -t "${IMAGE_BASE}:${version}-ubuntu22")
   if [[ "${version}" == "${LATEST_VERSION}" ]]; then
     TAG_ARGS+=(-t "${IMAGE_BASE}:latest")
   fi
