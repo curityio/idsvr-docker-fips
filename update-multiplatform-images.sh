@@ -33,8 +33,10 @@ UBUNTU_ARM_LAST_LAYER_ID=$(docker inspect "${UBUNTU_22}" | jq ".[0].RootFS.Layer
 
 docker buildx create --name idsvr-fips --use || docker buildx use idsvr-fips
 
-# Highest version in versions.yaml gets the "latest" tag
-LATEST_VERSION=$(yq -r '.versions[].version' "${VERSIONS_FILE}" | sort -V | tail -1)
+# Highest stable version in versions.yaml gets the "latest" tag; pre-release
+# versions (preview/beta/alpha/rc/hotfix) never do. Empty if no stable version.
+# grep exits 1 when everything is filtered out, hence the || true (pipefail).
+LATEST_VERSION=$(yq -r '.versions[].version' "${VERSIONS_FILE}" | { grep -vEi 'preview|beta|alpha|rc|hotfix' || true; } | sort -V | tail -1)
 
 # The MAJOR.MINOR.x and MAJOR.MINOR.y tags are ambiguous if two entries share
 # the same MAJOR.MINOR, so refuse to run in that case.
