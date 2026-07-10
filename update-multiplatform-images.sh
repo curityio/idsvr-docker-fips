@@ -153,7 +153,8 @@ EOF
     echo "${version} is based on the latest base image, skip building"
   fi
 
-  docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '^curityfips\.azurecr\.io/curity' | awk '{print $2}' | xargs -r docker rmi
+  # Remove local idsvr images by repo:tag; lists nothing (exit 0) when none exist
+  docker images --format '{{.Repository}}:{{.Tag}}' "${IMAGE_BASE}" | xargs -r docker rmi
 done
 
 # Delete stopped containers and images
