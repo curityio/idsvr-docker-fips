@@ -32,7 +32,6 @@ docker pull "$UBUNTU_22" --platform linux/arm64
 UBUNTU_ARM_LAST_LAYER_ID=$(docker inspect "${UBUNTU_22}" | jq ".[0].RootFS.Layers[-1]")
 
 docker buildx create --name idsvr-fips --use || docker buildx use idsvr-fips
-docker buildx inspect --bootstrap
 
 mkdir -p "${DOWNLOAD_DIR}" "${BUILD_CONTEXT_DIR}"
 
@@ -135,7 +134,6 @@ EOF
     echo "${version} is based on the latest base image, skip building"
   fi
 
-  #todo change to new private repo
   docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '^curityfips\.azurecr\.io/curity' | awk '{print $2}' | xargs -r docker rmi
 done
 
