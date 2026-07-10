@@ -2,9 +2,8 @@
 
 set -euo pipefail
 
-#todo change to new private repo
-CONTAINER_REGISTRY="curity.azurecr.io"
-IMAGE_REPO="curity/idsvr-fips"
+CONTAINER_REGISTRY="curityfips.azurecr.io"
+IMAGE_REPO="curity/idsvr"
 
 
 
@@ -137,7 +136,7 @@ EOF
   fi
 
   #todo change to new private repo
-  docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '^curity\.azurecr\.io/curity' | awk '{print $2}' | xargs -r docker rmi
+  docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '^curityfips\.azurecr\.io/curity' | awk '{print $2}' | xargs -r docker rmi
 done
 
 # Delete stopped containers and images
