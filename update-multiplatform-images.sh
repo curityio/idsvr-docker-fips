@@ -33,6 +33,18 @@ UBUNTU_ARM_LAST_LAYER_ID=$(docker inspect "${UBUNTU_22}" | jq ".[0].RootFS.Layer
 
 docker buildx create --name idsvr-fips --use || docker buildx use idsvr-fips
 
+# Highest version in versions.yaml gets the "latest" tag
+LATEST_VERSION=$(yq -r '.versions[].version' "${VERSIONS_FILE}" | sort -V | tail -1)
+
+# The MAJOR.MINOR.x and MAJOR.MINOR.y tags are ambiguous if two entries share
+# the same MAJOR.MINOR, so refuse to run in that case.
+DUPLICATE_MINORS=$(yq -r '.versions[].version' "${VERSIONS_FILE}" | cut -d. -f1,2 | sort | uniq -d)
+if [[ -n "${DUPLICATE_MINORS}" ]]; then
+  echo "error: multiple versions in $(basename "${VERSIONS_FILE}") share the same MAJOR.MINOR: ${DUPLICATE_MINORS}" >&2
+  echo "keep only the latest patch version of each MAJOR.MINOR" >&2
+  exit 1
+fi
+
 mkdir -p "${DOWNLOAD_DIR}" "${BUILD_CONTEXT_DIR}"
 
 download_if_missing() {
@@ -72,6 +84,13 @@ yq -o=json '.' "${VERSIONS_FILE}" | jq -c '.versions[]' | while read -r entry; d
 
   TAG="${IMAGE_BASE}:${version}"
 
+  # Additional tags: MAJOR.MINOR, MAJOR.MINOR-ubuntu22, and "latest" for the newest version
+  major_minor=$(cut -d. -f1,2 <<<"${version}")
+  TAG_ARGS=(-t "${TAG}" -t "${IMAGE_BASE}:${major_minor}" -t "${IMAGE_BASE}:${major_minor}-ubuntu22")
+  if [[ "${version}" == "${LATEST_VERSION}" ]]; then
+    TAG_ARGS+=(-t "${IMAGE_BASE}:latest")
+  fi
+
   x86_file="idsvr-fips-${version}-${commit}-linux-${x86_build}.tgz"
   arm_file="idsvr-fips-${version}-${commit}-linux-${arm_build}-aarch64.tgz"
 
@@ -97,7 +116,7 @@ yq -o=json '.' "${VERSIONS_FILE}" | jq -c '.versions[]' | while read -r entry; d
     extract_into "${DOWNLOAD_DIR}/${arm_file}" "${version_ctx}/idsvr-${version}-${commit}-arm64"
 
     if [[ -n "${PUSH_IMAGES}" ]]; then PUSH="--push"; else PUSH=""; fi
-    echo "Running docker buildx for tag: ${TAG} with --platform linux/amd64,linux/arm64 ${PUSH}"
+    echo "Running docker buildx for tags: ${TAG_ARGS[*]} with --platform linux/amd64,linux/arm64 ${PUSH}"
     TOKEN1=$(sudo pro api u.pro.attach.guest.get_guest_token.v1 | jq -r '.data.attributes.guest_token')
     TOKEN2=$(sudo pro api u.pro.attach.guest.get_guest_token.v1 | jq -r '.data.attributes.guest_token')
 
@@ -121,7 +140,7 @@ EOF
       --pull \
       --platform linux/amd64,linux/arm64 \
       ${PUSH} \
-      -t "${TAG}" \
+      "${TAG_ARGS[@]}" \
       --build-arg VERSION="${version}" \
       --build-arg COMMIT="${commit}" \
       --secret id=pro-attach-config-amd64,src="${PRO_ATTACH_CONFIG_AMD64}" \
