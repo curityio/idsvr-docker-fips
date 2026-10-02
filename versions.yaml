@@ -2,8 +2,8 @@ versions:
   - version: "11.5.1"
     commit: "7f29db724f"
     builds:
-      linux-x86: 27
-      linux-arm: 26
+      linux-x86: 28
+      linux-arm: 28
   - version: "11.4.3"
     commit: "314fe8db4e"
     builds:
