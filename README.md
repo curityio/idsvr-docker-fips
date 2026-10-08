@@ -9,7 +9,7 @@ Images are built for both `linux/amd64` and `linux/arm64` and the container runs
 
 # Repository layout
 
-* `versions.yaml` — list of Curity Identity Server versions to build, with their commit hash and Jenkins build numbers per arch.
+* `versions.yaml` — list of Curity Identity Server versions to build, with their commit hash, Jenkins build numbers per arch, and optional hotfixes.
 * `docker/Dockerfile` — the single Dockerfile used for all versions; `VERSION`, `COMMIT`, and `TARGETARCH` are passed as build args.
 * `docker/first-run` — first-run script copied into the image.
 * `update-multiplatform-images.sh` — daily rebuild script (see below).
@@ -19,6 +19,7 @@ Images are built for both `linux/amd64` and `linux/arm64` and the container runs
 * `docker` with `buildx`
 * `aws` CLI, authenticated for the `curity-idsvr-build-artifacts` S3 bucket
 * `yq` (mikefarah) and `jq`
+* `CLIENT_ID` and `CLIENT_SECRET` for the Curity release API, only when a version being built has hotfixes
 * An Ubuntu Pro **guest token** exported as `TOKEN`:
 
   ```bash
@@ -40,6 +41,27 @@ versions:
 
 The release tarballs are pulled from S3 by the script — there is no manual download step.
 
+## Hotfixes
+
+Hotfixes for a version are listed under its `hotfixes` key:
+
+```yaml
+versions:
+  - version: "1.2.3"
+    commit: "abcdef1234"
+    builds:
+      linux-x86: 10
+      linux-arm: 10
+    hotfixes:
+      - path: "1-2-3-1-example-fix"
+        originalFiles:
+          - "idsvr/lib/identityserver.example-1.2.3-abcdef1234.jar"
+```
+
+For each hotfix the script downloads `https://releaseapi.curity.io/releases/<version>/<path>/file` (cached under `downloads/<path>-<version>.tgz`). It then deletes every `originalFiles` entry from the extracted release and unpacks the hotfix archive over it, skipping `*.md` files. This is the same mechanism `hotfixes.json` uses in the `idsvr-docker` repository. The build fails if an `originalFiles` entry is missing from the release.
+
+Adding a hotfix to an already published version does not by itself trigger a rebuild; run with `FORCE_UPDATE_VERSION=<version>` to rebuild it.
+
 # Image updates
 
 Since the base OS regularly receives security patches, `update-multiplatform-images.sh` is run daily to ensure published images contain the latest fixes.
@@ -47,7 +69,7 @@ Since the base OS regularly receives security patches, `update-multiplatform-ima
 For every entry in `versions.yaml` the script:
 
 1. Pulls the published image (both arches) and compares its layer hashes against a freshly-pulled `ubuntu:22.04`.
-2. If the base has changed (or `FORCE_UPDATE_VERSION` matches the version), downloads the release tarballs from S3, extracts them into a per-version build context, and runs `docker buildx build --pull --platform linux/amd64,linux/arm64` against `docker/Dockerfile`.
+2. If the base has changed (or `FORCE_UPDATE_VERSION` matches the version), downloads the release tarballs from S3 (and any hotfixes from the release API), extracts them into a per-version build context, applies the hotfixes, and runs `docker buildx build --pull --platform linux/amd64,linux/arm64` against `docker/Dockerfile`.
 3. If `PUSH_IMAGES` is set, the resulting multi-arch image is pushed to the registry.
 
 Per-version build contexts under `build-context/<version>/` ensure each `buildx` invocation only sees the artifacts for the version being built. Downloaded tarballs are cached under `downloads/` and reused across runs; extracted contents are removed after a successful build.
@@ -58,6 +80,7 @@ Per-version build contexts under `build-context/<version>/` ensure each `buildx`
 |---|---|---|---|
 | `TOKEN` | yes | — | Ubuntu Pro token used to attach inside the build. |
 | `PUSH_IMAGES` | no | (unset) | When set, the built image is pushed to the registry. Without this, multi-arch buildx output stays in the buildx cache and is not loaded into the local daemon. |
+| `CLIENT_ID` / `CLIENT_SECRET` | only with hotfixes | — | Client credentials for the Curity release API, used to download hotfixes. |
 | `FORCE_UPDATE_VERSION` | no | (unset) | Substring match against `version`; forces a rebuild even if the base image hasn't changed. |
 
 # Customizing the image
