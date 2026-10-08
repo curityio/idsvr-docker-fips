@@ -4,6 +4,10 @@ versions:
     builds:
       linux-x86: 28
       linux-arm: 28
+    hotfixes:
+      - path: "11-5-1-1-support-ios-27"
+        originalFiles:
+            - "idsvr/lib/identityserver.cat-11.5.1-7f29db724f_obf.jar"
   - version: "11.4.3"
     commit: "314fe8db4e"
     builds:
