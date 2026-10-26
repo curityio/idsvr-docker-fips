@@ -8,5 +8,5 @@ versions:
     commit: "d36c27d56c"
     builds:
       linux-x86: 57
-      linux-arm: 34
+      linux-arm: 36
 
