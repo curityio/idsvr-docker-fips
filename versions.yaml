@@ -4,9 +4,9 @@ versions:
     builds:
       linux-x86: 31
       linux-arm: 31
-  - version: "11.4.3"
-    commit: "314fe8db4e"
+  - version: "11.4.4"
+    commit: "d36c27d56c"
     builds:
-      linux-x86: 56
-      linux-arm: 33
+      linux-x86: 57
+      linux-arm: 34
 
