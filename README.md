@@ -20,11 +20,9 @@ Images are built for both `linux/amd64` and `linux/arm64` and the container runs
 * `aws` CLI, authenticated for the `curity-idsvr-build-artifacts` S3 bucket
 * `yq` (mikefarah) and `jq`
 * `CLIENT_ID` and `CLIENT_SECRET` for the Curity release API, only when a version being built has hotfixes
-* An Ubuntu Pro **guest token** exported as `TOKEN`:
-
-  ```bash
-  export TOKEN=$(sudo pro api u.pro.attach.guest.get_guest_token.v1 | jq -r .data.attributes.guest_token)
-  ```
+* Either an Ubuntu Pro contract token exported as `PRO_TOKEN`, or an Ubuntu Pro attached host with
+  `sudo` access so the script can request guest tokens itself
+* Outbound HTTPS to `contracts.canonical.com` and `esm.ubuntu.com` (from the host and the build containers)
 
 # Adding a new version
 
@@ -78,7 +76,7 @@ Per-version build contexts under `build-context/<version>/` ensure each `buildx`
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `TOKEN` | yes | — | Ubuntu Pro token used to attach inside the build. |
+| `PRO_TOKEN` | no | (unset) | Ubuntu Pro contract token used to attach inside the build. When unset, guest tokens are requested via `sudo pro api` on the host. |
 | `PUSH_IMAGES` | no | (unset) | When set, the built image is pushed to the registry. Without this, multi-arch buildx output stays in the buildx cache and is not loaded into the local daemon. |
 | `CLIENT_ID` / `CLIENT_SECRET` | only with hotfixes | — | Client credentials for the Curity release API, used to download hotfixes. |
 | `FORCE_UPDATE_VERSION` | no | (unset) | Substring match against `version`; forces a rebuild even if the base image hasn't changed. |

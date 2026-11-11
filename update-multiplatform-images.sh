@@ -20,6 +20,7 @@ UBUNTU_22=ubuntu:22.04
 
 PUSH_IMAGES="${PUSH_IMAGES:-}"
 FORCE_UPDATE_VERSION="${FORCE_UPDATE_VERSION:-}"
+PRO_TOKEN="${PRO_TOKEN:-}"
 
 for cmd in aws yq jq docker tar; do
   command -v "${cmd}" >/dev/null || { echo "error: ${cmd} not found in PATH" >&2; exit 1; }
@@ -88,6 +89,23 @@ download_hotfix_if_missing() {
   token=$(get_release_api_token)
   curl -f -s -S -H "Authorization: Bearer ${token}" "${RELEASE_API}/${version}/${hotfix_path}/file" -o "${local_path}.part"
   mv "${local_path}.part" "${local_path}"
+}
+
+# `pro api` reports failures as JSON on stdout, so print it instead of dying silently under pipefail.
+get_pro_guest_token() {
+  local response token
+  if ! response=$(sudo pro api u.pro.attach.guest.get_guest_token.v1); then
+    echo "error: failed to get Ubuntu Pro guest token (is this host attached? check 'pro status'):" >&2
+    echo "${response}" >&2
+    exit 1
+  fi
+  token=$(jq -r '.data.attributes.guest_token' <<<"${response}")
+  if [[ -z "${token}" || "${token}" == "null" ]]; then
+    echo "error: Ubuntu Pro guest token missing in response:" >&2
+    echo "${response}" >&2
+    exit 1
+  fi
+  echo "${token}"
 }
 
 # Removes each hotfix's originalFiles from the extracted release, then unpacks the hotfix over it.
@@ -182,8 +200,15 @@ yq -o=json '.' "${VERSIONS_FILE}" | jq -c '.versions[]' | while read -r entry; d
 
     if [[ -n "${PUSH_IMAGES}" ]]; then PUSH="--push"; else PUSH=""; fi
     echo "Running docker buildx for tags: ${TAG_ARGS[*]} with --platform linux/amd64,linux/arm64 ${PUSH}"
-    TOKEN1=$(sudo pro api u.pro.attach.guest.get_guest_token.v1 | jq -r '.data.attributes.guest_token')
-    TOKEN2=$(sudo pro api u.pro.attach.guest.get_guest_token.v1 | jq -r '.data.attributes.guest_token')
+    # Prefer the Ubuntu Pro contract token when provided (e.g. Jenkins credential),
+    # otherwise request short-lived guest tokens from this attached host.
+    if [[ -n "${PRO_TOKEN:-}" ]]; then
+      TOKEN1="${PRO_TOKEN}"
+      TOKEN2="${PRO_TOKEN}"
+    else
+      TOKEN1=$(get_pro_guest_token)
+      TOKEN2=$(get_pro_guest_token)
+    fi
 
     PRO_ATTACH_CONFIG_ARM64=$(mktemp)
     trap 'rm -f "${PRO_ATTACH_CONFIG_ARM64}"' EXIT
