@@ -1,9 +1,9 @@
 versions:
-  - version: "11.6.0"
-    commit: "e710f70661"
+  - version: "11.6.1"
+    commit: "11201237dc"
     builds:
-      linux-x86: 16
-      linux-arm: 13
+      linux-x86: 17
+      linux-arm: 14
   - version: "11.5.2"
     commit: "8642fb75b6"
     builds:
