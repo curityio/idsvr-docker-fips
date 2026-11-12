@@ -7,7 +7,7 @@ versions:
   - version: "11.5.3"
     commit: "77f0104eb6"
     builds:
-      linux-x86: 34
+      linux-x86: 33
       linux-arm: 34
   - version: "11.4.4"
     commit: "d36c27d56c"
