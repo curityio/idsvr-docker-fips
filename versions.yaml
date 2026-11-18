@@ -4,7 +4,7 @@ versions:
     builds:
       linux-x86: 23
       linux-arm: 19
-  - version: "11.5.3"
+  - version: "11.5.4"
     commit: "77f0104eb6"
     builds:
       linux-x86: 33
