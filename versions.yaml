@@ -1,14 +1,14 @@
 versions:
-  - version: "11.6.2"
-    commit: "e570571bc1"
+  - version: "11.6.3"
+    commit: "3a4f9fb2d6"
     builds:
-      linux-x86: 23
-      linux-arm: 19
-  - version: "11.5.3"
-    commit: "77f0104eb6"
+      linux-x86: 25
+      linux-arm: 20
+  - version: "11.5.4"
+    commit: "f7a4f478a6"
     builds:
-      linux-x86: 33
-      linux-arm: 34
+      linux-x86: 36
+      linux-arm: 35
   - version: "11.4.6"
     commit: "b3b8d638cc"
     builds:
