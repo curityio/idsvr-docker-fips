@@ -4,11 +4,11 @@ versions:
     builds:
       linux-x86: 25
       linux-arm: 20
-  - version: "11.5.3"
-    commit: "77f0104eb6"
+  - version: "11.5.4"
+    commit: "f7a4f478a6"
     builds:
-      linux-x86: 33
-      linux-arm: 34
+      linux-x86: 36
+      linux-arm: 35
   - version: "11.4.5"
     commit: "7fbf4c3b6a"
     builds:
