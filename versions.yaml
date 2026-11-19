@@ -9,9 +9,9 @@ versions:
     builds:
       linux-x86: 36
       linux-arm: 35
-  - version: "11.4.5"
-    commit: "7fbf4c3b6a"
+  - version: "11.4.6"
+    commit: "b3b8d638cc"
     builds:
-      linux-x86: 58
-      linux-arm: 37
+      linux-x86: 61
+      linux-arm: 39
 
