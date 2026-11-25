@@ -1,4 +1,9 @@
 versions:
+  - version: "11.7.0-beta"
+    commit: "cae591c179"
+    builds:
+      linux-x86: 2
+      linux-arm: 2
   - version: "11.6.3"
     commit: "3a4f9fb2d6"
     builds:
